@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kafka
+  name: producer
+spec:
+  selector:
+    matchLabels:
+      app: producer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: producer
+    spec:
+      containers:
+      - name: producer
+        image: kringen/message-producer:1.2.0
+        imagePullPolicy: Always
+        env:
+        - name: KAFKA_SERVER
+          value: "kafka"
+        - name: KAFKA_PORT
+          value: "9092"
+        - name: TOPIC_NAME
+          value: "topicxyz"
+        ports:
+        - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  name: producer
+  namespace: kafka
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: producer

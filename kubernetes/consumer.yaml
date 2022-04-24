@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kafka
+  name: consumer
+spec:
+  selector:
+    matchLabels:
+      app: consumer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - name: producer
+        image: kringen/message-consumer:1.2.0
+        imagePullPolicy: Always
+        env:
+        - name: KAFKA_SERVER
+          value: "kafka"
+        - name: KAFKA_PORT
+          value: "9092"
+        - name: TOPIC_NAME
+          value: "topicxyz"
