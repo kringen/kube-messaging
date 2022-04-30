@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kafka
+  name: load-test
+spec:
+  selector:
+    matchLabels:
+      app: load-test
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: load-test
+    spec:
+      containers:
+      - name: load-test
+        image: kringen/load-test:1.0.0
+        imagePullPolicy: Always
+        args:
+        - "python"
+        - "load_test.py"
+        - "http://producer:8080/kafka/publish"
+        - "post"
+        - "message"
+        - "10"
