@@ -1,0 +1,89 @@
+namespace: kafka
+
+zookeeper:
+  name: zookeeper
+  replicas: 1
+  container:
+    name: zookeeper
+    imageRepository: kringen
+    image: zookeeper
+    imageVersion: 1.0.0
+    command: ["/usr/local/zookeeper/bin/zkServer.sh"]
+    args: ["start-foreground","conf/zoo.cfg"]
+    env: []
+    dataVolumeMountPath: /usr/local/zookeeper/data
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "1"
+      limits:
+        memory: "512Mi"
+        cpu: "3"
+    ports:
+    - containerPort: 2181
+      name: clientport
+    - containerPort: 2888
+      name: serverport
+    - containerPort: 3888
+      name: leaderport
+  service:
+    ports:
+    - port: 2181
+      name: clientport
+    - port: 2888
+      name: serverport
+    - port: 3888
+      name: leaderport
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+kafka:
+  name: kafka
+  replicas: 1
+  container:
+    name: kafka
+    imageRepository: kringen
+    image: kafka
+    imageVersion: 1.0.0
+    env: []
+    dataVolumeMountPath: /tmp/kafka-logs
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "1"
+      limits:
+        memory: "512Mi"
+        cpu: "3"
+    ports:
+    - containerPort: 9092
+      name: serverport
+  service:
+    ports:
+    - port: 9092
+      name: serverport
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}

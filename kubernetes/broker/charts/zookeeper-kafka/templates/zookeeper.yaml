@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.zookeeper.name }}
+  labels:
+    app: {{ .Values.zookeeper.name }}
+spec:
+  ports:
+{{- with .Values.zookeeper.service.ports }}
+{{ toYaml . | indent 2 }}
+{{- end }}
+  clusterIP: None # Headless Service
+  selector:
+    app: {{ .Values.zookeeper.name }}
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.zookeeper.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.zookeeper.name }} # has to match .spec.template.metadata.labels
+  serviceName: {{ .Values.zookeeper.name }}
+  replicas: {{ .Values.zookeeper.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.zookeeper.name }} # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: {{ .Values.zookeeper.container.name }}
+        image: {{ printf "%s/%s:%s" .Values.zookeeper.container.imageRepository .Values.zookeeper.container.image .Values.zookeeper.container.imageVersion }}
+        env:
+{{- with .Values.zookeeper.container.env }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+        command: 
+          {{  range .Values.zookeeper.container.command }}
+            - {{ . }}
+          {{ end }}
+        args: 
+          {{  range .Values.zookeeper.container.args }}
+            - {{ . }}
+          {{ end }}
+        ports:
+{{- with .Values.zookeeper.container.ports }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+        resources:
+{{- with .Values.zookeeper.container.resources }}
+{{ toYaml . | indent 10 }}
+{{- end }}        
+        volumeMounts:
+        - name: data-volume
+          mountPath: {{ .Values.zookeeper.container.dataVolumeMountPath }}
+      volumes:
+      - name: data-volume
+      {{- if .Values.zookeeper.persistentVolume }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.zookeeper.persistentVolumeClaim.claimName }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}

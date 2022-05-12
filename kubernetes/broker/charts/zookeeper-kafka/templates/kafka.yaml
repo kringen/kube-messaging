@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.kafka.name }}
+  labels:
+    app: {{ .Values.kafka.name }}
+spec:
+  ports:
+{{- with .Values.kafka.service.ports }}
+{{ toYaml . | indent 2 }}
+{{- end }}
+  clusterIP: None # Headless Service
+  selector:
+    app: {{ .Values.kafka.name }}
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.kafka.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.kafka.name }} # has to match .spec.template.metadata.labels
+  serviceName: {{ .Values.kafka.name }}
+  replicas: {{ .Values.kafka.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.kafka.name }} # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: {{ .Values.kafka.container.name }}
+        image: {{ printf "%s/%s:%s" .Values.kafka.container.imageRepository .Values.kafka.container.image .Values.kafka.container.imageVersion }}
+        env:
+{{- with .Values.kafka.container.env }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+        command: 
+          {{  range .Values.kafka.container.command }}
+            - {{ . }}
+          {{ end }}
+        args: 
+          {{  range .Values.kafka.container.args }}
+            - {{ . }}
+          {{ end }}
+        ports:
+{{- with .Values.kafka.container.ports }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+        resources:
+{{- with .Values.kafka.container.resources }}
+{{ toYaml . | indent 10 }}
+{{- end }}        
+        volumeMounts:
+        - name: data-volume
+          mountPath: {{ .Values.kafka.container.dataVolumeMountPath }}
+      initContainers:
+      - name: zookeeper-check
+        image: busybox
+        command: ["/bin/sh","-c", "until nc -zv zookeeper 2181; do echo waiting for Zookeeper; sleep 5; done;"]
+      volumes:
+      - name: data-volume
+      {{- if .Values.kafka.persistentVolume }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.kafka.persistentVolumeClaim.claimName }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
