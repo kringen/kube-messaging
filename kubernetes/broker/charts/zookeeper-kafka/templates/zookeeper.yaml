@@ -44,10 +44,6 @@ spec:
           {{  range .Values.zookeeper.container.command }}
             - {{ . }}
           {{ end }}
-        args: 
-          {{  range .Values.zookeeper.container.args }}
-            - {{ . }}
-          {{ end }}
         ports:
 {{- with .Values.zookeeper.container.ports }}
 {{ toYaml . | indent 8 }}
@@ -56,6 +52,22 @@ spec:
 {{- with .Values.zookeeper.container.resources }}
 {{ toYaml . | indent 10 }}
 {{- end }}        
+        readinessProbe:
+          exec:
+            command:
+            {{  range .Values.zookeeper.container.readinessProbe.command }}
+            - {{ . }}
+            {{ end }}
+          initialDelaySeconds: {{ .Values.zookeeper.container.readinessProbe.initialDelaySeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.container.readinessProbe.timeoutSeconds }}
+        livenessProbe:
+          exec:
+            command:
+            {{  range .Values.zookeeper.container.livenessProbe.command }}
+            - {{ . }}
+            {{ end }}
+          initialDelaySeconds: {{ .Values.zookeeper.container.livenessProbe.initialDelaySeconds }}
+          timeoutSeconds: {{ .Values.zookeeper.container.livenessProbe.timeoutSeconds }}
         volumeMounts:
         - name: data-volume
           mountPath: {{ .Values.zookeeper.container.dataVolumeMountPath }}
