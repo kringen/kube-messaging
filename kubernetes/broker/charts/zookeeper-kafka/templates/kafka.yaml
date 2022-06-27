@@ -59,6 +59,10 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: {{ .Values.kafka.container.dataVolumeMountPath }}
+        readinessProbe:
+{{- with .Values.kafka.container.readinessProbe }}
+{{ toYaml . | indent 10 }}
+{{- end }}  
       initContainers:
       - name: zookeeper-check
         image: busybox
